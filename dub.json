@@ -1,0 +1,9 @@
+{
+	"name": "mandelbrot",
+	"description": "A Mandelbrot set viewer.",
+	"copyright": "Copyright © 2015, outland.karasu",
+	"authors": ["outland.karasu@gmail.com"],
+	"dependencies": {
+                "derelict-sdl2": "~master"
+	}
+}

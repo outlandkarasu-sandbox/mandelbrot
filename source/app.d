@@ -34,9 +34,9 @@ enum PlotColor : Uint8 {
 
 enum {
     MIN_X = -2.0,
-    MAX_X = 2.0,
-    MIN_Y = -2.0,
-    MAX_Y = 2.0,
+    MAX_X = 1.0,
+    MIN_Y = -1.5,
+    MAX_Y = 1.5,
     SIZE_X = MAX_X - MIN_X,
     SIZE_Y = MAX_Y - MIN_Y,
     STEP_X = SIZE_X / WIDTH,
@@ -50,20 +50,20 @@ static this() {
 
 
 enum {
-    DIVERGE_LIMIT = 100.0, /// 発散の閾値
-    RECUSIVE_COUNT = 1000,
+    DIVERGE_LIMIT = 4.0, /// 発散の閾値
+    RECUSIVE_COUNT = 100,
 }
 
 /// マンデルブロ集合の計算
-bool mandelbrot(double a, double b, double x = 0.0, double y = 0.0, size_t n = 0) @safe pure nothrow @nogc {
-    if(n > RECUSIVE_COUNT) {
-        return true;
+size_t mandelbrot(double a, double b, double x = 0.0, double y = 0.0, size_t n = 0) @safe pure nothrow @nogc {
+    if(n >= RECUSIVE_COUNT) {
+        return 0;
     }
 
     immutable x2 = x * x;
     immutable y2 = y * y;
     if(x2 + y2 > DIVERGE_LIMIT) {
-        return false;
+        return n;
     }
 
     return mandelbrot(a, b, x2 - y2 + a, 2.0 * x * y + b, n + 1);
@@ -103,21 +103,24 @@ void main() {
 
     // 点の描画用関数
     void plot(double x, double y) {
+        immutable n = mandelbrot(x, y, 0, 0);
+        if(n == 0) {
+            SDL_SetRenderDrawColor(
+                renderer,
+                PlotColor.R,
+                PlotColor.G,
+                PlotColor.B,
+                PlotColor.A);
+        } else {
+            SDL_SetRenderDrawColor(renderer, 0, cast(Uint8)(n & 0xff), cast(Uint8)(n >>> 8), Uint8.max);
+        }
         SDL_RenderDrawPoint(renderer, cast(int)((x - MIN_X) * WIDTH / SIZE_X), cast(int)((y - MIN_Y) * HEIGHT / SIZE_Y));
     }
 
     // 描画実行
-    SDL_SetRenderDrawColor(
-        renderer,
-        PlotColor.R,
-        PlotColor.G,
-        PlotColor.B,
-        PlotColor.A);
     for(double y = MIN_Y; y < MAX_Y; y += STEP_Y) {
         for(double x = MIN_X; x < MAX_X; x += STEP_X) {
-            if(mandelbrot(x, y, 0, 0)) {
-                plot(x, y);
-            }
+            plot(x, y);
         }
     }
     SDL_RenderPresent(renderer);
